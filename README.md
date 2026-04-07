@@ -1,17 +1,17 @@
 # Sigil
 
-A native macOS markdown reader. No Electron, no web views, no dependencies.
+A minimalist markdown reader for macOS.
 
-Opens `.md` files in a clean, themed window. That's it.
+Built because every markdown viewer out there is either Electron-bloated, abandoned, collecting data, or hiding behind a subscription. Sigil just opens `.md` files and makes them look good.
+
+~500 lines of Swift. Native rendering. Nothing phones home.
 
 ## Features
 
-- Native AppKit text rendering
-- 6 built-in themes (Neon, Obsidian, Nord, Parchment, Paper, Terminal)
+- 6 themes: Neon, Obsidian, Nord, Parchment, Paper, Terminal
 - Inline editing with syntax tinting
 - Adjustable font size and line spacing
-- Dark/light themes
-- Zero network access, zero telemetry
+- Renders code blocks, lists, links, headings, blockquotes, checkboxes
 
 ## Build
 
@@ -21,14 +21,8 @@ Requires macOS 13+ and Xcode Command Line Tools.
 ./build.sh
 ```
 
-The built `Sigil.app` will be in the project root.
-
 ## Install
 
 1. Copy `Sigil.app` to `/Applications/`
-2. First launch: right-click → **Open** (macOS blocks unsigned apps on first run)
-3. To set as default for `.md` files: right-click any `.md` → Get Info → Open with → Sigil → Change All
-
-## Why
-
-Every markdown viewer is either Electron-bloated, abandoned, or wants your data. Sigil is ~500 lines of Swift, reads files, renders them, and does nothing else.
+2. First launch: right-click the app, then click **Open** (macOS flags unsigned apps on first run, this only happens once)
+3. Set as default: right-click any `.md` file, Get Info, Open with, select Sigil, Change All
