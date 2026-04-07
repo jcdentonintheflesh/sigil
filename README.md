@@ -4,7 +4,7 @@ A minimalist markdown reader for macOS.
 
 Built because every markdown viewer out there is either Electron-bloated, abandoned, collecting data, or hiding behind a subscription. Sigil just opens `.md` files and makes them look good.
 
-~500 lines of Swift. Native rendering. Nothing phones home.
+Swift, native rendering, nothing phones home.
 
 ## Features
 
