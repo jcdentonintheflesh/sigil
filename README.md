@@ -11,12 +11,9 @@ Swift, native rendering, nothing phones home.
 1. Go to [Releases](https://github.com/jcdentonintheflesh/sigil/releases/latest) and download **Sigil.zip**
 2. Double-click the zip to unzip it
 3. Drag **Sigil.app** into your **Applications** folder
-4. Open Terminal (search "Terminal" in Spotlight) and paste this command, then hit Enter:
-   ```
-   xattr -cr /Applications/Sigil.app
-   ```
-   This removes the macOS quarantine flag that blocks apps downloaded from the internet. You only need to do this once.
-5. To make Sigil your default app for `.md` files: right-click any `.md` file, click **Get Info**, under "Open with" pick **Sigil**, then click **Change All**
+4. Try opening Sigil. macOS will block it because it's not from the App Store.
+5. Open **System Settings > Privacy & Security**, scroll down, you'll see "Sigil was blocked" with an **Open Anyway** button. Click it and enter your password. This only happens once.
+6. To make Sigil your default app for `.md` files: right-click any `.md` file, click **Get Info**, under "Open with" pick **Sigil**, then click **Change All**
 
 ## Features
 

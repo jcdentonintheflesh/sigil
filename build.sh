@@ -23,4 +23,7 @@ mv SigilBin Sigil.app/Contents/MacOS/Sigil
 cp Sigil/Info.plist Sigil.app/Contents/Info.plist
 echo 'APPL????' > Sigil.app/Contents/PkgInfo
 
+# Ad-hoc sign so macOS doesn't flag it as "damaged"
+codesign -s - --force --deep Sigil.app
+
 echo "Built Sigil.app"
