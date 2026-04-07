@@ -9,16 +9,4 @@ Screenshots/
 Sigil.icns
 Sigil.iconset/
 Sigil.zip
-prototypes*.png
-proto_*.png
-proto2_*.png
-final_seal.png
-final_tablet.png
-final_hash.png
-final_comparison.png
-final_icon.png
-small_*.png
-medium_*.png
-make_prototypes*.py
-make_final*.py
-*.jpg
+design/
