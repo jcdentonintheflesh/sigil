@@ -6,6 +6,14 @@ Built because every markdown viewer out there is either Electron-bloated, abando
 
 Swift, native rendering, nothing phones home.
 
+## Download
+
+1. Go to [Releases](https://github.com/jcdentonintheflesh/sigil/releases/latest) and download **Sigil.zip**
+2. Double-click the zip to unzip it
+3. Drag **Sigil.app** into your **Applications** folder
+4. Double-click Sigil to open it. macOS will warn you because the app isn't from the App Store. Click **Cancel**, then right-click Sigil and click **Open**, then click **Open** again in the popup. This only happens once.
+5. To make Sigil your default app for `.md` files: right-click any `.md` file, click **Get Info**, under "Open with" pick **Sigil**, then click **Change All**
+
 ## Features
 
 - 6 themes: Neon, Obsidian, Nord, Parchment, Paper, Terminal
@@ -13,16 +21,13 @@ Swift, native rendering, nothing phones home.
 - Adjustable font size and line spacing
 - Renders code blocks, lists, links, headings, blockquotes, checkboxes
 
-## Build
+## Build from source
 
 Requires macOS 13+ and Xcode Command Line Tools.
 
 ```
+git clone https://github.com/jcdentonintheflesh/sigil.git
+cd sigil
 ./build.sh
+open Sigil.app test.md
 ```
-
-## Install
-
-1. Copy `Sigil.app` to `/Applications/`
-2. First launch: right-click the app, then click **Open** (macOS flags unsigned apps on first run, this only happens once)
-3. Set as default: right-click any `.md` file, Get Info, Open with, select Sigil, Change All
