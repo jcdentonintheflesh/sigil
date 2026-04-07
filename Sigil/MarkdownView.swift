@@ -281,9 +281,11 @@ struct PreviewTextView: NSViewRepresentable {
         textView.isAutomaticLinkDetectionEnabled = true
         textView.textContainer?.widthTracksTextView = true
         textView.isRichText = true
-        textView.autoresizingMask = [.width, .height]
+        textView.autoresizingMask = [.width]
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.minSize = NSSize(width: 0, height: 0)
 
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
@@ -292,22 +294,28 @@ struct PreviewTextView: NSViewRepresentable {
         scrollView.scrollerStyle = .overlay
         scrollView.drawsBackground = false
 
-        applyContent(to: textView)
+        // Don't apply content here — the view has no real frame yet.
+        // Defer to next run loop so the view is in the window hierarchy.
+        textView.backgroundColor = theme.background
+        DispatchQueue.main.async { [markdown, theme, fontSize, lineSpacing] in
+            Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
+        }
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? CodeBlockTextView else { return }
-        applyContent(to: textView)
+        Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
     }
 
-    private func applyContent(to textView: CodeBlockTextView) {
+    private static func applyContent(to textView: CodeBlockTextView, markdown: String, theme: SigilTheme, fontSize: CGFloat, lineSpacing: CGFloat) {
         textView.backgroundColor = theme.background
         let renderer = MarkdownRenderer(theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
         let rendered = renderer.render(markdown)
         textView.textStorage?.setAttributedString(rendered)
         textView.codeBlockRanges = renderer.codeBlockRanges
         textView.codeBackground = theme.codeBackground
+        textView.needsLayout = true
         textView.needsDisplay = true
     }
 }
