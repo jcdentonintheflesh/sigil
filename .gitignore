@@ -6,3 +6,6 @@ DerivedData/
 *.xcuserstate
 *.xcuserdatad
 Screenshots/
+Sigil.icns
+Sigil.iconset/
+Sigil.zip

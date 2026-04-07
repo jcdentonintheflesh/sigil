@@ -21,6 +21,7 @@ swiftc \
 mkdir -p Sigil.app/Contents/MacOS Sigil.app/Contents/Resources
 mv SigilBin Sigil.app/Contents/MacOS/Sigil
 cp Sigil/Info.plist Sigil.app/Contents/Info.plist
+cp Sigil/Sigil.icns Sigil.app/Contents/Resources/Sigil.icns
 echo 'APPL????' > Sigil.app/Contents/PkgInfo
 
 # Ad-hoc sign so macOS doesn't flag it as "damaged"
