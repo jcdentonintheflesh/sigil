@@ -267,34 +267,30 @@ struct PreviewTextView: NSViewRepresentable {
     let lineSpacing: CGFloat
 
     func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = true
-        scrollView.scrollerStyle = .overlay
-        scrollView.drawsBackground = false
+        let scrollView = NSTextView.scrollableTextView()
 
-        let textContainer = NSTextContainer()
-        textContainer.widthTracksTextView = true
+        // Swap in our custom text view subclass
+        let originalTextView = scrollView.documentView as! NSTextView
+        let textContainer = originalTextView.textContainer!
 
-        let layoutManager = NSLayoutManager()
-        layoutManager.addTextContainer(textContainer)
-
-        let textStorage = NSTextStorage()
-        textStorage.addLayoutManager(layoutManager)
-
-        let textView = CodeBlockTextView(frame: .zero, textContainer: textContainer)
+        let textView = CodeBlockTextView(frame: originalTextView.frame, textContainer: textContainer)
         textView.isEditable = false
         textView.isSelectable = true
         textView.drawsBackground = true
         textView.textContainerInset = NSSize(width: 48, height: 36)
         textView.isAutomaticLinkDetectionEnabled = true
+        textView.textContainer?.widthTracksTextView = true
         textView.isRichText = true
-        textView.autoresizingMask = [.width]
+        textView.autoresizingMask = [.width, .height]
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
 
         scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = true
+        scrollView.scrollerStyle = .overlay
+        scrollView.drawsBackground = false
 
         applyContent(to: textView)
         return scrollView
