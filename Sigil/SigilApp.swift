@@ -14,7 +14,7 @@ final class SigilPreferences: ObservableObject {
     }
 
     private init() {
-        self.themeName = UserDefaults.standard.string(forKey: "sigil.theme") ?? "Neon"
+        self.themeName = UserDefaults.standard.string(forKey: "sigil.theme") ?? "Sigil"
         let storedSize = UserDefaults.standard.double(forKey: "sigil.fontSize")
         self.fontSize = storedSize > 0 ? CGFloat(storedSize) : 15
         let storedSpacing = UserDefaults.standard.double(forKey: "sigil.lineSpacing")

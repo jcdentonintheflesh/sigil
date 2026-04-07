@@ -17,11 +17,28 @@ struct SigilTheme {
 
     // MARK: - Built-in Themes
 
-    static let allThemes: [SigilTheme] = [neon, obsidian, nord, parchment, paper, terminal]
+    static let allThemes: [SigilTheme] = [sigil, neon, obsidian, nord, parchment, paper, terminal]
 
     static func named(_ name: String) -> SigilTheme {
-        allThemes.first(where: { $0.name == name }) ?? neon
+        allThemes.first(where: { $0.name == name }) ?? sigil
     }
+
+    // Sigil — off-white with grey structure and pink accents, matches the app icon
+    static let sigil = SigilTheme(
+        name: "Sigil",
+        background: NSColor(srgbRed: 0.94, green: 0.93, blue: 0.92, alpha: 1),
+        bodyText: NSColor(srgbRed: 0.18, green: 0.18, blue: 0.22, alpha: 1),
+        headingText: NSColor(srgbRed: 0.96, green: 0.20, blue: 0.43, alpha: 1),
+        accentColor: NSColor(srgbRed: 0.96, green: 0.20, blue: 0.43, alpha: 1),
+        codeText: NSColor(srgbRed: 0.82, green: 0.14, blue: 0.37, alpha: 1),
+        codeBackground: NSColor(srgbRed: 0.88, green: 0.87, blue: 0.86, alpha: 1),
+        blockquoteText: NSColor(srgbRed: 0.47, green: 0.46, blue: 0.49, alpha: 1),
+        blockquoteBorder: NSColor(srgbRed: 0.96, green: 0.20, blue: 0.43, alpha: 0.35),
+        linkColor: NSColor(srgbRed: 0.78, green: 0.16, blue: 0.34, alpha: 1),
+        hrColor: NSColor(srgbRed: 0.75, green: 0.74, blue: 0.76, alpha: 1),
+        cursorColor: NSColor(srgbRed: 0.96, green: 0.20, blue: 0.43, alpha: 1),
+        selectionColor: NSColor(srgbRed: 0.96, green: 0.20, blue: 0.43, alpha: 0.12)
+    )
 
     // Neon — cyberpunk default, dark bg with electric accents
     static let neon = SigilTheme(
