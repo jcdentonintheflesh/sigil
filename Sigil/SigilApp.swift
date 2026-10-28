@@ -12,6 +12,12 @@ final class SigilPreferences: ObservableObject {
     @Published var lineSpacing: CGFloat {
         didSet { UserDefaults.standard.set(Double(lineSpacing), forKey: "sigil.lineSpacing") }
     }
+    @Published var textDirection: TextDirection {
+        didSet { UserDefaults.standard.set(textDirection.rawValue, forKey: "sigil.textDirection") }
+    }
+    @Published var showToolbar: Bool {
+        didSet { UserDefaults.standard.set(showToolbar, forKey: "sigil.showToolbar") }
+    }
 
     private init() {
         self.themeName = UserDefaults.standard.string(forKey: "sigil.theme") ?? "Sigil"
@@ -19,6 +25,8 @@ final class SigilPreferences: ObservableObject {
         self.fontSize = storedSize > 0 ? CGFloat(storedSize) : 15
         let storedSpacing = UserDefaults.standard.double(forKey: "sigil.lineSpacing")
         self.lineSpacing = storedSpacing > 0 ? CGFloat(storedSpacing) : 1.4
+        self.textDirection = TextDirection(rawValue: UserDefaults.standard.string(forKey: "sigil.textDirection") ?? "") ?? .auto
+        self.showToolbar = UserDefaults.standard.object(forKey: "sigil.showToolbar") as? Bool ?? true
     }
 }
 
@@ -44,6 +52,12 @@ struct SigilApp: App {
         .windowStyle(.titleBar)
         .defaultSize(width: 780, height: 920)
         .commands {
+            CommandGroup(after: .toolbar) {
+                Button(prefs.showToolbar ? "Hide Sigil Toolbar" : "Show Sigil Toolbar") {
+                    withAnimation(.easeOut(duration: 0.2)) { prefs.showToolbar.toggle() }
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+            }
             CommandGroup(after: .textFormatting) {
                 Divider()
                 Menu("Theme") {

@@ -1,19 +1,33 @@
 import AppKit
 import Foundation
 
+enum TextDirection: String, CaseIterable {
+    case auto, rtl, ltr
+
+    var label: String {
+        switch self {
+        case .auto: return "Auto"
+        case .rtl: return "RTL"
+        case .ltr: return "LTR"
+        }
+    }
+}
+
 final class MarkdownRenderer {
 
     let theme: SigilTheme
     let fontSize: CGFloat
     let lineSpacing: CGFloat
+    let direction: TextDirection
 
     // Track code block character ranges for background drawing
     var codeBlockRanges: [NSRange] = []
 
-    init(theme: SigilTheme, fontSize: CGFloat = 15, lineSpacing: CGFloat = 1.4) {
+    init(theme: SigilTheme, fontSize: CGFloat = 15, lineSpacing: CGFloat = 1.4, direction: TextDirection = .auto) {
         self.theme = theme
         self.fontSize = fontSize
         self.lineSpacing = lineSpacing
+        self.direction = direction
     }
 
     // MARK: - Main render
@@ -102,7 +116,47 @@ final class MarkdownRenderer {
             i += 1
         }
 
+        applyWritingDirection(to: result)
         return result
+    }
+
+    // MARK: - Bidi
+
+    /// Auto: paragraphs whose first strong character is from an RTL script become right-to-left;
+    /// neutral paragraphs (blank lines, rules) inherit the previous direction.
+    /// RTL forces every paragraph, LTR leaves everything as-is. Code blocks always stay LTR.
+    private func applyWritingDirection(to result: NSMutableAttributedString) {
+        if direction == .ltr { return }
+        let ns = result.string as NSString
+        var previousRTL = false
+        ns.enumerateSubstrings(in: NSRange(location: 0, length: ns.length), options: [.byParagraphs, .substringNotRequired]) { _, _, enclosing, _ in
+            if self.codeBlockRanges.contains(where: { NSIntersectionRange($0, enclosing).length > 0 }) {
+                previousRTL = false
+                return
+            }
+            let isRTL = self.direction == .rtl || (Self.isRightToLeft(ns.substring(with: enclosing)) ?? previousRTL)
+            previousRTL = isRTL
+            guard isRTL else { return }
+
+            result.enumerateAttribute(.paragraphStyle, in: enclosing) { value, range, _ in
+                let ps = (value as? NSParagraphStyle)?.mutableCopy() as? NSMutableParagraphStyle ?? self.bodyParagraphStyle()
+                ps.baseWritingDirection = .rightToLeft
+                result.addAttribute(.paragraphStyle, value: ps, range: range)
+            }
+        }
+    }
+
+    /// Direction of the first strongly-directional character, or nil if there is none.
+    static func isRightToLeft(_ text: String) -> Bool? {
+        for scalar in text.unicodeScalars {
+            switch scalar.value {
+            case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF:
+                if scalar.properties.isAlphabetic { return true }
+            default:
+                if scalar.properties.isAlphabetic { return false }
+            }
+        }
+        return nil
     }
 
     // MARK: - Convenience
@@ -418,3 +472,24 @@ final class MarkdownRenderer {
     }
 }
 
+// MARK: - Pasteboard
+
+extension NSAttributedString {
+    /// Writes HTML (with dir="rtl" per paragraph), RTF and plain text. Theme colors are
+    /// stripped so dark-theme text doesn't paste as white-on-white into mail clients.
+    func writeForPasting(to pasteboard: NSPasteboard = .general) {
+        let copy = NSMutableAttributedString(attributedString: self)
+        let full = NSRange(location: 0, length: copy.length)
+        copy.removeAttribute(.foregroundColor, range: full)
+        copy.removeAttribute(.backgroundColor, range: full)
+
+        pasteboard.clearContents()
+        if let html = try? copy.data(from: full, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]) {
+            pasteboard.setData(html, forType: .html)
+        }
+        if let rtf = copy.rtf(from: full) {
+            pasteboard.setData(rtf, forType: .rtf)
+        }
+        pasteboard.setString(copy.string, forType: .string)
+    }
+}

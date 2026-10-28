@@ -5,8 +5,8 @@ struct ContentView: View {
     @Binding var document: MarkdownDocument
     @EnvironmentObject var prefs: SigilPreferences
     @State private var isEditing = false
-    @State private var showBar = true
     @State private var fontSizeText: String = ""
+    @State private var didCopy = false
 
     private var currentTheme: SigilTheme {
         SigilTheme.named(prefs.themeName)
@@ -15,7 +15,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Fixed top bar
-            if showBar {
+            if prefs.showToolbar {
                 controlBar
             }
 
@@ -28,7 +28,8 @@ struct ContentView: View {
                         markdown: document.text,
                         theme: currentTheme,
                         fontSize: prefs.fontSize,
-                        lineSpacing: prefs.lineSpacing
+                        lineSpacing: prefs.lineSpacing,
+                        direction: prefs.textDirection
                     )
                 }
             }
@@ -127,7 +128,28 @@ struct ContentView: View {
 
             lineSpacingPresetMenu
 
+            divider
+
+            directionMenu
+
             Spacer()
+
+            // Copy whole document
+            Button(action: copyAll) {
+                HStack(spacing: 5) {
+                    Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 11, weight: .medium))
+                    Text(didCopy ? "Copied" : "Copy")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.white.opacity(0.10))
+                .cornerRadius(5)
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(.white.opacity(0.8))
+            .help("Copy the whole document")
 
             // Edit/Preview toggle
             Button(action: { isEditing.toggle() }) {
@@ -148,7 +170,7 @@ struct ContentView: View {
             divider
 
             // Hide bar button
-            Button(action: { withAnimation(.easeOut(duration: 0.2)) { showBar = false } }) {
+            Button(action: { withAnimation(.easeOut(duration: 0.2)) { prefs.showToolbar = false } }) {
                 Image(systemName: "chevron.up")
                     .font(.system(size: 10, weight: .bold))
                     .frame(width: 20, height: 20)
@@ -217,7 +239,42 @@ struct ContentView: View {
         .frame(width: 20)
     }
 
+    private var directionMenu: some View {
+        Menu {
+            ForEach(TextDirection.allCases, id: \.self) { dir in
+                Button((dir == prefs.textDirection ? "✓ " : "") + dir.label + (dir == .auto ? "  (detect per paragraph)" : "")) {
+                    prefs.textDirection = dir
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: prefs.textDirection == .rtl ? "text.alignright" : prefs.textDirection == .ltr ? "text.alignleft" : "arrow.left.arrow.right")
+                    .font(.system(size: 10))
+                Text(prefs.textDirection.label)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+            }
+            .foregroundColor(.white.opacity(0.6))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help("Text direction")
+    }
+
     // MARK: - Helpers
+
+    /// Preview mode copies the rendered document (rich, bidi-aware); edit mode copies raw markdown.
+    private func copyAll() {
+        if isEditing {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(document.text, forType: .string)
+        } else {
+            MarkdownRenderer(theme: currentTheme, fontSize: prefs.fontSize, lineSpacing: prefs.lineSpacing, direction: prefs.textDirection)
+                .render(document.text)
+                .writeForPasting()
+        }
+        didCopy = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { didCopy = false }
+    }
 
     private func adjustLineSpacing(_ delta: CGFloat) {
         let newVal = prefs.lineSpacing + delta
@@ -231,6 +288,15 @@ class CodeBlockTextView: NSTextView {
     var codeBlockRanges: [NSRange] = []
     var codeBackground: NSColor = .darkGray
     var codeCornerRadius: CGFloat = 6
+
+    override func copy(_ sender: Any?) {
+        let range = selectedRange()
+        guard selectedRanges.count == 1, range.length > 0, let storage = textStorage else {
+            super.copy(sender)
+            return
+        }
+        storage.attributedSubstring(from: range).writeForPasting()
+    }
 
     override func drawBackground(in rect: NSRect) {
         // Draw the normal background first
@@ -265,6 +331,7 @@ struct PreviewTextView: NSViewRepresentable {
     let theme: SigilTheme
     let fontSize: CGFloat
     let lineSpacing: CGFloat
+    let direction: TextDirection
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -297,20 +364,20 @@ struct PreviewTextView: NSViewRepresentable {
         // Don't apply content here — the view has no real frame yet.
         // Defer to next run loop so the view is in the window hierarchy.
         textView.backgroundColor = theme.background
-        DispatchQueue.main.async { [markdown, theme, fontSize, lineSpacing] in
-            Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
+        DispatchQueue.main.async { [markdown, theme, fontSize, lineSpacing, direction] in
+            Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing, direction: direction)
         }
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? CodeBlockTextView else { return }
-        Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
+        Self.applyContent(to: textView, markdown: markdown, theme: theme, fontSize: fontSize, lineSpacing: lineSpacing, direction: direction)
     }
 
-    private static func applyContent(to textView: CodeBlockTextView, markdown: String, theme: SigilTheme, fontSize: CGFloat, lineSpacing: CGFloat) {
+    private static func applyContent(to textView: CodeBlockTextView, markdown: String, theme: SigilTheme, fontSize: CGFloat, lineSpacing: CGFloat, direction: TextDirection) {
         textView.backgroundColor = theme.background
-        let renderer = MarkdownRenderer(theme: theme, fontSize: fontSize, lineSpacing: lineSpacing)
+        let renderer = MarkdownRenderer(theme: theme, fontSize: fontSize, lineSpacing: lineSpacing, direction: direction)
         let rendered = renderer.render(markdown)
         textView.textStorage?.setAttributedString(rendered)
         textView.codeBlockRanges = renderer.codeBlockRanges
